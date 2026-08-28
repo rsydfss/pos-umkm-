@@ -24,15 +24,40 @@ export default function AuthenticatedLayout({ header, children }) {
                             </div>
 
                             <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink
-                                    href={route('dashboard')}
-                                    active={route().current('dashboard')}
-                                >
-                                    Dashboard
-                                </NavLink>
-                            </div>
-                        </div>
+                               <NavLink
+                            href={route('dashboard')}
+                            active={route().current('dashboard')}
+                        >
+                            Dashboard
+                        </NavLink>
 
+                        <NavLink
+                            href={route('categories.index')}
+                            active={route().current('categories.*')}
+                        >
+                            Kategori
+                        </NavLink>
+
+                        <NavLink
+                            href={route('products.index')}
+                            active={route().current('products.*')}
+                        >
+                            Produk
+                        </NavLink>
+                        <NavLink
+                            href={route('transactions.index')}
+                            active={route().current('transactions.*')}
+                        >
+                            Kasir
+                        </NavLink>
+                        <NavLink
+                            href={route('transactions.history')}
+                            active={route().current('transactions.history')}
+                        >
+                            Riwayat
+                        </NavLink>
+                        </div>
+                        </div>
                         <div className="hidden sm:ms-6 sm:flex sm:items-center">
                             <div className="relative ms-3">
                                 <Dropdown>
