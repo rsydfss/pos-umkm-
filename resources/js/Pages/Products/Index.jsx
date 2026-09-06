@@ -12,136 +12,705 @@ const emptyForm = {
 };
 
 export default function Index({ products, categories }) {
-    const { data, setData, post, reset, processing, errors } = useForm(emptyForm);
     const [editingId, setEditingId] = useState(null);
+
+    const {
+        data,
+        setData,
+        post,
+        reset,
+        processing,
+        errors,
+    } = useForm(emptyForm);
+
     const editForm = useForm(emptyForm);
+
+    const inputClass =
+        'mt-1 w-full rounded-md border-gray-300 text-sm shadow-sm';
 
     function handleAdd(e) {
         e.preventDefault();
-        post(route('products.store'), { onSuccess: () => reset() });
+
+        post(route('products.store'), {
+            preserveScroll: true,
+            onSuccess: () => {
+                reset();
+            },
+        });
     }
 
     function startEdit(product) {
         setEditingId(product.id);
+
         editForm.setData({
-            category_id: product.category_id,
-            name: product.name,
-            sku: product.sku,
-            purchase_price: product.purchase_price,
-            selling_price: product.selling_price,
-            stock: product.stock,
+            category_id: product.category_id ?? '',
+            name: product.name ?? '',
+            sku: product.sku ?? '',
+            purchase_price: product.purchase_price ?? '',
+            selling_price: product.selling_price ?? '',
+            stock: product.stock ?? '',
         });
+    }
+
+    function cancelEdit() {
+        setEditingId(null);
+        editForm.reset();
+        editForm.clearErrors();
     }
 
     function handleUpdate(e, id) {
         e.preventDefault();
+
         editForm.put(route('products.update', id), {
-            onSuccess: () => setEditingId(null),
+            preserveScroll: true,
+            onSuccess: () => {
+                setEditingId(null);
+                editForm.reset();
+            },
         });
     }
 
     function handleDelete(id) {
-        if (confirm('Yakin hapus produk ini?')) {
-            editForm.delete(route('products.destroy', id));
+        if (!confirm('Yakin ingin menghapus produk ini?')) {
+            return;
         }
+
+        editForm.delete(route('products.destroy', id), {
+            preserveScroll: true,
+        });
     }
 
-    const inputClass = "border-gray-300 rounded-md shadow-sm w-full text-sm";
-
     return (
-        <AuthenticatedLayout header={<h2 className="text-xl font-semibold">Produk</h2>}>
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800">
+                    Produk
+                </h2>
+            }
+        >
             <Head title="Produk" />
 
-            <div className="py-8 max-w-5xl mx-auto sm:px-6">
-                <form onSubmit={handleAdd} className="bg-white shadow rounded-lg p-4 mb-6 grid grid-cols-2 md:grid-cols-6 gap-3 items-end">
-                    <div className="col-span-2">
-                        <label className="text-xs text-gray-500">Nama Produk</label>
-                        <input className={inputClass} value={data.name} onChange={e => setData('name', e.target.value)} />
-                        {errors.name && <p className="text-red-600 text-xs">{errors.name}</p>}
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500">SKU</label>
-                        <input className={inputClass} value={data.sku} onChange={e => setData('sku', e.target.value)} />
-                        {errors.sku && <p className="text-red-600 text-xs">{errors.sku}</p>}
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500">Kategori</label>
-                        <select className={inputClass} value={data.category_id} onChange={e => setData('category_id', e.target.value)}>
-                            <option value="">Pilih</option>
-                            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                        </select>
-                        {errors.category_id && <p className="text-red-600 text-xs">{errors.category_id}</p>}
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500">Harga Beli</label>
-                        <input type="number" className={inputClass} value={data.purchase_price} onChange={e => setData('purchase_price', e.target.value)} />
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500">Harga Jual</label>
-                        <input type="number" className={inputClass} value={data.selling_price} onChange={e => setData('selling_price', e.target.value)} />
-                        {errors.selling_price && <p className="text-red-600 text-xs">{errors.selling_price}</p>}
-                    </div>
-                    <div>
-                        <label className="text-xs text-gray-500">Stok</label>
-                        <input type="number" className={inputClass} value={data.stock} onChange={e => setData('stock', e.target.value)} />
-                    </div>
-                    <button type="submit" disabled={processing} className="col-span-2 md:col-span-6 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700">
-                        Tambah Produk
-                    </button>
-                </form>
+            <div className="py-8">
+                <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
 
-                <div className="bg-white shadow rounded-lg overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-500">
-                            <tr>
-                                <th className="p-3">Nama</th>
-                                <th className="p-3">SKU</th>
-                                <th className="p-3">Kategori</th>
-                                <th className="p-3">Harga Jual</th>
-                                <th className="p-3">Stok</th>
-                                <th className="p-3">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {products.map(product => (
-                                editingId === product.id ? (
-                                    <tr key={product.id}>
-                                        <td colSpan={6} className="p-3">
-                                            <form onSubmit={e => handleUpdate(e, product.id)} className="grid grid-cols-2 md:grid-cols-6 gap-2 items-end">
-                                                <input className={inputClass} value={editForm.data.name} onChange={e => editForm.setData('name', e.target.value)} />
-                                                <input className={inputClass} value={editForm.data.sku} onChange={e => editForm.setData('sku', e.target.value)} />
-                                                <select className={inputClass} value={editForm.data.category_id} onChange={e => editForm.setData('category_id', e.target.value)}>
-                                                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                                </select>
-                                                <input type="number" className={inputClass} value={editForm.data.purchase_price} onChange={e => editForm.setData('purchase_price', e.target.value)} />
-                                                <input type="number" className={inputClass} value={editForm.data.selling_price} onChange={e => editForm.setData('selling_price', e.target.value)} />
-                                                <input type="number" className={inputClass} value={editForm.data.stock} onChange={e => editForm.setData('stock', e.target.value)} />
-                                                <div className="col-span-2 md:col-span-6 flex gap-3">
-                                                    <button type="submit" className="text-green-600 text-sm font-medium">Simpan</button>
-                                                    <button type="button" onClick={() => setEditingId(null)} className="text-gray-500 text-sm">Batal</button>
-                                                </div>
-                                            </form>
-                                        </td>
+                    {/* =========================
+                        FORM TAMBAH PRODUK
+                    ========================== */}
+                    <div className="rounded-lg bg-white p-6 shadow">
+                        <div className="mb-5">
+                            <h3 className="text-lg font-semibold text-gray-800">
+                                Tambah Produk
+                            </h3>
+
+                            <p className="mt-1 text-sm text-gray-500">
+                                Tambahkan produk baru ke dalam sistem.
+                            </p>
+                        </div>
+
+                        <form
+                            onSubmit={handleAdd}
+                            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+                        >
+                            {/* Nama */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Nama Produk
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={data.name}
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
+                                    className={inputClass}
+                                />
+
+                                {errors.name && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.name}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* SKU */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    SKU
+                                </label>
+
+                                <input
+                                    type="text"
+                                    value={data.sku}
+                                    onChange={(e) =>
+                                        setData('sku', e.target.value)
+                                    }
+                                    className={inputClass}
+                                />
+
+                                {errors.sku && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.sku}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Kategori */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Kategori
+                                </label>
+
+                                <select
+                                    value={data.category_id}
+                                    onChange={(e) =>
+                                        setData(
+                                            'category_id',
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClass}
+                                >
+                                    <option value="">
+                                        Pilih Kategori
+                                    </option>
+
+                                    {categories.map((category) => (
+                                        <option
+                                            key={category.id}
+                                            value={category.id}
+                                        >
+                                            {category.name}
+                                        </option>
+                                    ))}
+                                </select>
+
+                                {errors.category_id && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.category_id}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Harga Beli */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Harga Beli
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={data.purchase_price}
+                                    onChange={(e) =>
+                                        setData(
+                                            'purchase_price',
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClass}
+                                />
+
+                                {errors.purchase_price && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.purchase_price}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Harga Jual */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Harga Jual
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={data.selling_price}
+                                    onChange={(e) =>
+                                        setData(
+                                            'selling_price',
+                                            e.target.value
+                                        )
+                                    }
+                                    className={inputClass}
+                                />
+
+                                {errors.selling_price && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.selling_price}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Stok */}
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
+                                    Stok
+                                </label>
+
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={data.stock}
+                                    onChange={(e) =>
+                                        setData('stock', e.target.value)
+                                    }
+                                    className={inputClass}
+                                />
+
+                                {errors.stock && (
+                                    <p className="mt-1 text-xs text-red-600">
+                                        {errors.stock}
+                                    </p>
+                                )}
+                            </div>
+
+                            {/* Tombol */}
+                            <div className="md:col-span-2 lg:col-span-3">
+                                <button
+                                    type="submit"
+                                    disabled={processing}
+                                    className="rounded-md bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    {processing
+                                        ? 'Menambahkan...'
+                                        : 'Tambah Produk'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {/* =========================
+                        DAFTAR PRODUK
+                    ========================== */}
+                    <div className="overflow-hidden rounded-lg bg-white shadow">
+                        <div className="border-b border-gray-200 p-6">
+                            <h3 className="text-lg font-semibold text-gray-800">
+                                Daftar Produk
+                            </h3>
+
+                            <p className="mt-1 text-sm text-gray-500">
+                                Kelola produk, harga, kategori, dan stok.
+                            </p>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            No
+                                        </th>
+
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Nama
+                                        </th>
+
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            SKU
+                                        </th>
+
+                                        <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Kategori
+                                        </th>
+
+                                        <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Harga Jual
+                                        </th>
+
+                                        <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Stok
+                                        </th>
+
+                                        <th className="px-6 py-3 text-center text-xs font-medium uppercase tracking-wider text-gray-500">
+                                            Aksi
+                                        </th>
                                     </tr>
-                                ) : (
-                                    <tr key={product.id}>
-                                        <td className="p-3">{product.name}</td>
-                                        <td className="p-3">{product.sku}</td>
-                                        <td className="p-3">{product.category?.name}</td>
-                                        <td className="p-3">Rp {Number(product.selling_price).toLocaleString('id-ID')}</td>
-                                        <td className="p-3">{product.stock}</td>
-                                        <td className="p-3 flex gap-3">
-                                            <button onClick={() => startEdit(product)} className="text-indigo-600">Edit</button>
-                                            <button onClick={() => handleDelete(product.id)} className="text-red-600">Hapus</button>
-                                        </td>
-                                    </tr>
-                                )
-                            ))}
-                            {products.length === 0 && (
-                                <tr><td colSpan={6} className="p-4 text-gray-500 text-center">Belum ada produk.</td></tr>
-                            )}
-                        </tbody>
-                    </table>
+                                </thead>
+
+                                <tbody className="divide-y divide-gray-200 bg-white">
+                                    {products.map((product, index) => {
+                                        const isEditing =
+                                            editingId === product.id;
+
+                                        if (isEditing) {
+                                            return (
+                                                <tr key={product.id}>
+                                                    <td
+                                                        colSpan="7"
+                                                        className="bg-gray-50 p-6"
+                                                    >
+                                                        <form
+                                                            onSubmit={(e) =>
+                                                                handleUpdate(
+                                                                    e,
+                                                                    product.id
+                                                                )
+                                                            }
+                                                            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+                                                        >
+                                                            {/* Nama */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    Nama Produk
+                                                                </label>
+
+                                                                <input
+                                                                    type="text"
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .name
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'name',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                />
+
+                                                                {editForm.errors
+                                                                    .name && (
+                                                                    <p className="mt-1 text-xs text-red-600">
+                                                                        {
+                                                                            editForm
+                                                                                .errors
+                                                                                .name
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {/* SKU */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    SKU
+                                                                </label>
+
+                                                                <input
+                                                                    type="text"
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .sku
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'sku',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                />
+
+                                                                {editForm.errors
+                                                                    .sku && (
+                                                                    <p className="mt-1 text-xs text-red-600">
+                                                                        {
+                                                                            editForm
+                                                                                .errors
+                                                                                .sku
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Kategori */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    Kategori
+                                                                </label>
+
+                                                                <select
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .category_id
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'category_id',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                >
+                                                                    <option value="">
+                                                                        Pilih
+                                                                        Kategori
+                                                                    </option>
+
+                                                                    {categories.map(
+                                                                        (
+                                                                            category
+                                                                        ) => (
+                                                                            <option
+                                                                                key={
+                                                                                    category.id
+                                                                                }
+                                                                                value={
+                                                                                    category.id
+                                                                                }
+                                                                            >
+                                                                                {
+                                                                                    category.name
+                                                                                }
+                                                                            </option>
+                                                                        )
+                                                                    )}
+                                                                </select>
+
+                                                                {editForm.errors
+                                                                    .category_id && (
+                                                                    <p className="mt-1 text-xs text-red-600">
+                                                                        {
+                                                                            editForm
+                                                                                .errors
+                                                                                .category_id
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Harga Beli */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    Harga Beli
+                                                                </label>
+
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .purchase_price
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'purchase_price',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                />
+                                                            </div>
+
+                                                            {/* Harga Jual */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    Harga Jual
+                                                                </label>
+
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .selling_price
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'selling_price',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                />
+
+                                                                {editForm.errors
+                                                                    .selling_price && (
+                                                                    <p className="mt-1 text-xs text-red-600">
+                                                                        {
+                                                                            editForm
+                                                                                .errors
+                                                                                .selling_price
+                                                                        }
+                                                                    </p>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Stok */}
+                                                            <div>
+                                                                <label className="text-sm font-medium text-gray-700">
+                                                                    Stok
+                                                                </label>
+
+                                                                <input
+                                                                    type="number"
+                                                                    min="0"
+                                                                    value={
+                                                                        editForm
+                                                                            .data
+                                                                            .stock
+                                                                    }
+                                                                    onChange={(
+                                                                        e
+                                                                    ) =>
+                                                                        editForm.setData(
+                                                                            'stock',
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        )
+                                                                    }
+                                                                    className={
+                                                                        inputClass
+                                                                    }
+                                                                />
+                                                            </div>
+
+                                                            {/* Tombol */}
+                                                            <div className="flex gap-2 md:col-span-2 lg:col-span-3">
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={
+                                                                        editForm.processing
+                                                                    }
+                                                                    className="rounded-md bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50"
+                                                                >
+                                                                    {editForm.processing
+                                                                        ? 'Menyimpan...'
+                                                                        : 'Simpan'}
+                                                                </button>
+
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={
+                                                                        cancelEdit
+                                                                    }
+                                                                    className="rounded-md bg-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-300"
+                                                                >
+                                                                    Batal
+                                                                </button>
+                                                            </div>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+
+                                        return (
+                                            <tr
+                                                key={product.id}
+                                                className="hover:bg-gray-50"
+                                            >
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
+                                                    {index + 1}
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800">
+                                                    {product.name}
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                                                    {product.sku}
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
+                                                    {product.category?.name ??
+                                                        '-'}
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-800">
+                                                    Rp{' '}
+                                                    {Number(
+                                                        product.selling_price
+                                                    ).toLocaleString('id-ID')}
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-center text-sm">
+                                                    <span
+                                                        className={
+                                                            product.stock <= 5
+                                                                ? 'rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700'
+                                                                : 'rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700'
+                                                        }
+                                                    >
+                                                        {product.stock}
+                                                    </span>
+                                                </td>
+
+                                                <td className="whitespace-nowrap px-6 py-4 text-center">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                startEdit(
+                                                                    product
+                                                                )
+                                                            }
+                                                            className="rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                                                        >
+                                                            Edit
+                                                        </button>
+
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    product.id
+                                                                )
+                                                            }
+                                                            className="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700"
+                                                        >
+                                                            Hapus
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+
+                                    {products.length === 0 && (
+                                        <tr>
+                                            <td
+                                                colSpan="7"
+                                                className="px-6 py-10 text-center text-sm text-gray-500"
+                                            >
+                                                Belum ada produk.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

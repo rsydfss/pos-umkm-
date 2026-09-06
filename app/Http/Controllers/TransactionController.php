@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\StockMovement;
+use Barryvdh\DomPDF\Facade\Pdf; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -53,16 +55,32 @@ class TransactionController extends Controller
                     'subtotal' => $item['subtotal'],
                 ]);
 
-                $item['product']->decrement(
+                $product = $item['product'];
+
+                $stockBefore = $product->stock;
+
+                $product->decrement(
                     'stock',
                     $item['quantity']
                 );
+
+                $product->refresh();
+
+                StockMovement::create([
+                    'product_id'   => $product->id,
+                    'user_id'      => auth()->id(),
+                    'quantity'     => -$item['quantity'],
+                    'stock_before' => $stockBefore,
+                    'stock_after'  => $product->stock,
+                    'type'         => 'sale',
+                    'note'         => 'Stok berkurang karena transaksi',
+                ]);
             }
 
             return $transaction;
         });
 
-return redirect()
+            return redirect()
     ->route('transactions.receipt', $transaction->id)
     ->with('success', 'Transaksi berhasil disimpan.');
     }
@@ -87,15 +105,44 @@ return redirect()
             'transaction' => $transaction,
         ]);
     }
-    public function receipt(Transaction $transaction)
-{
-    $transaction->load([
-        'user',
-        'items.product',
-    ]);
+        public function receipt(Transaction $transaction)
+    {
+        $transaction->load([
+            'user',
+            'items.product',
+        ]);
 
-    return Inertia::render('Transactions/Receipt', [
-        'transaction' => $transaction,
-    ]);
-}
+        return Inertia::render('Transactions/Receipt', [
+            'transaction' => $transaction,
+        ]);
+    }
+    public function exportPdf(Request $request)
+    {
+        $startDate = $request->start_date;
+        $endDate = $request->end_date;
+
+        $query = Transaction::with('user')
+            ->latest();
+
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
+        }
+
+        $transactions = $query->get();
+
+        $total = $transactions->sum('total');
+
+        $pdf = Pdf::loadView('exports.transactions-pdf', [
+            'transactions' => $transactions,
+            'startDate' => $startDate,
+            'endDate' => $endDate,
+            'total' => $total,
+        ]);
+
+        return $pdf->download('laporan-transaksi.pdf');
+    }
 }

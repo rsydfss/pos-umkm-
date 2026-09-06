@@ -5,6 +5,8 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -44,6 +46,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware('admin')->group(function () {
 
+        // Manajemen User
+        Route::resource('users', UserController::class)
+            ->only(['index', 'store', 'update', 'destroy']);
+        Route::get('/reports', [ReportController::class, 'index'])
+            ->name('reports.index');
+
+        Route::get('/reports/export/excel', [ReportController::class, 'exportExcel'])
+             ->name('reports.export.excel');
+             Route::get('/reports/export/pdf', [ReportController::class, 'exportPdf'])
+            ->name('reports.export.pdf');
+        
         // Kategori
         Route::resource('categories', CategoryController::class)
             ->except(['create', 'edit', 'show']);
@@ -63,7 +76,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/transactions/history', [TransactionController::class, 'history'])
         ->name('transactions.history');
 
-
+    Route::get('/transactions/export/pdf', [TransactionController::class, 'exportPdf'])
+    ->name('transactions.export.pdf');
+    
     Route::get('/transactions/{transaction}/receipt', [TransactionController::class, 'receipt'])
     ->name('transactions.receipt');
 

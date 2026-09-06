@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\StockMovement;
 
 class Product extends Model
 {
@@ -16,5 +17,9 @@ class Product extends Model
     public function transactionItems()
     {
         return $this->hasMany(TransactionItem::class);
+    }
+    public function stockMovements()
+    {   
+    return $this->hasMany(StockMovement::class);
     }
 }

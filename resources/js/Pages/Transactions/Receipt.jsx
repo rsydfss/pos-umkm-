@@ -2,6 +2,9 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 export default function Receipt({ transaction }) {
+    const handlePrint = () => {
+    window.print();
+    };
     const formatRupiah = (value) => {
         return Number(value).toLocaleString('id-ID');
     };
@@ -28,16 +31,21 @@ export default function Receipt({ transaction }) {
 
             <div className="py-6">
                 <div className="mx-auto max-w-md px-4">
-                    <div className="rounded-lg bg-white p-6 shadow">
+                   <div className="rounded-lg bg-white p-6 shadow">
+                    <div className="print-receipt mx-auto w-full">
+                          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3 print:hidden"></div>
 
                         <div className="text-center">
                             <h1 className="text-xl font-bold">
                                 POS UMKM
                             </h1>
-
+                             <p className="text-sm">
+                                Toko Anda
+                            </p>
                             <p className="mt-1 text-sm text-gray-500">
                                 Struk Transaksi
                             </p>
+                        </div>
                         </div>
 
                         <div className="my-5 border-t border-dashed" />
@@ -127,7 +135,14 @@ export default function Receipt({ transaction }) {
                             Terima kasih telah berbelanja.
                         </p>
 
-                        <div className="mt-6 flex gap-3">
+                        <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                            <button
+                                type="button"
+                                onClick={handlePrint}
+                                className="rounded-md bg-gray-800 px-4 py-2 text-center text-sm font-medium text-white hover:bg-gray-700"
+                            >
+                                Cetak Struk
+                            </button>
                             <Link
                                 href={route('transactions.index')}
                                 className="flex-1 rounded-md bg-gray-200 px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-300"
