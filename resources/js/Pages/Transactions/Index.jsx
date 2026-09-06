@@ -3,6 +3,9 @@ import { Head, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 
 export default function Index({ products }) {
+    const [search, setSearch] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
+
     const [cart, setCart] = useState([]);
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [paidAmount, setPaidAmount] = useState('');
@@ -18,6 +21,34 @@ export default function Index({ products }) {
         0,
         Number(paidAmount || 0) - total
     );
+        const categories = useMemo(() => {
+        return [
+            ...new Map(
+                products
+                    .filter((product) => product.category)
+                    .map((product) => [
+                        product.category.id,
+                        product.category,
+                    ])
+            ).values(),
+        ];
+    }, [products]);
+
+    const filteredProducts = useMemo(() => {
+        return products.filter((product) => {
+            const keyword = search.toLowerCase();
+
+            const matchesSearch =
+                product.name.toLowerCase().includes(keyword) ||
+                product.sku.toLowerCase().includes(keyword);
+
+            const matchesCategory =
+                selectedCategory === '' ||
+                product.category?.id === Number(selectedCategory);
+
+            return matchesSearch && matchesCategory;
+        });
+    }, [products, search, selectedCategory]);
 
     const { data, setData, post, processing, errors } = useForm({
     items: [],
@@ -126,50 +157,90 @@ const submit = (e) => {
         >
             <Head title="Kasir" />
 
-            <div className="py-6">
-                <div className="mx-auto grid max-w-7xl gap-6 px-4 lg:grid-cols-3">
-                    {/* Produk */}
-                    <div className="lg:col-span-2">
-                        <div className="rounded-lg bg-white p-6 shadow">
-                            <h3 className="mb-4 text-lg font-semibold">
-                                Produk
-                            </h3>
+<div className="py-6">
+    <div className="mx-auto grid max-w-7xl gap-6 px-4 lg:grid-cols-3">
+        {/* Produk */}
+        <div className="lg:col-span-2">
+            <div className="rounded-lg bg-white p-6 shadow">
+                <h3 className="mb-4 text-lg font-semibold">
+                    Produk
+                </h3>
 
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {products.map((product) => (
-                                    <button
-                                        key={product.id}
-                                        type="button"
-                                        onClick={() =>
-                                            addToCart(product)
-                                        }
-                                        className="rounded-lg border p-4 text-left transition hover:bg-gray-50"
-                                    >
-                                        <div className="font-semibold">
-                                            {product.name}
-                                        </div>
+                {/* Pencarian & Filter */}
+                <div className="mb-5 grid gap-3 sm:grid-cols-2">
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Cari nama produk atau SKU..."
+                        className="w-full rounded-md border-gray-300"
+                    />
 
-                                        <div className="mt-1 text-sm text-gray-500">
-                                            SKU: {product.sku}
-                                        </div>
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) =>
+                            setSelectedCategory(e.target.value)
+                        }
+                        className="w-full rounded-md border-gray-300"
+                    >
+                        <option value="">
+                            Semua Kategori
+                        </option>
 
-                                        <div className="mt-2 font-bold">
-                                            Rp{' '}
-                                            {Number(
-                                                product.selling_price
-                                            ).toLocaleString(
-                                                'id-ID'
-                                            )}
-                                        </div>
+                        {categories.map((category) => (
+                            <option
+                                key={category.id}
+                                value={category.id}
+                            >
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
 
-                                        <div className="mt-1 text-sm text-gray-500">
-                                            Stok: {product.stock}
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
+                    {/* Daftar Produk */}
+                    {filteredProducts.length === 0 ? (
+                        <div className="rounded-lg border border-dashed p-8 text-center text-gray-500">
+                            Produk tidak ditemukan.
                         </div>
-                    </div>
+                    ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                            {filteredProducts.map((product) => (
+                                <button
+                                    key={product.id}
+                                    type="button"
+                                    onClick={() => addToCart(product)}
+                                    className="rounded-lg border p-4 text-left transition hover:bg-gray-50"
+                                >
+                                    <div className="font-semibold">
+                                        {product.name}
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        SKU: {product.sku}
+                                    </div>
+
+                                    <div className="mt-2 font-bold">
+                                        Rp{' '}
+                                        {Number(
+                                            product.selling_price
+                                        ).toLocaleString('id-ID')}
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        Kategori:{' '}
+                                        {product.category?.name ?? '-'}
+                                    </div>
+
+                                    <div className="mt-1 text-sm text-gray-500">
+                                        Stok: {product.stock}
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
 
                     {/* Keranjang */}
                     <div>

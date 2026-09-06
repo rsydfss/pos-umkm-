@@ -29,6 +29,8 @@ export default function History({ transactions }) {
             <div className="py-6">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="overflow-hidden rounded-lg bg-white shadow">
+
+                        {/* Header */}
                         <div className="border-b border-gray-200 p-6">
                             <h3 className="text-lg font-semibold text-gray-800">
                                 Semua Transaksi
@@ -39,6 +41,7 @@ export default function History({ transactions }) {
                             </p>
                         </div>
 
+                        {/* Jika belum ada transaksi */}
                         {transactions.length === 0 ? (
                             <div className="p-6 text-center text-gray-500">
                                 Belum ada transaksi.
@@ -46,6 +49,8 @@ export default function History({ transactions }) {
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="min-w-full divide-y divide-gray-200">
+
+                                    {/* Header tabel */}
                                     <thead className="bg-gray-50">
                                         <tr>
                                             <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
@@ -74,55 +79,57 @@ export default function History({ transactions }) {
                                         </tr>
                                     </thead>
 
+                                    {/* Isi tabel */}
                                     <tbody className="divide-y divide-gray-200 bg-white">
-                                        {transactions.map(
-                                            (transaction, index) => (
-                                                <tr
-                                                    key={transaction.id}
-                                                    className="hover:bg-gray-50"
-                                                >
-                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                                        #{transaction.id}
-                                                    </td>
+                                        {transactions.map((transaction) => (
+                                            <tr
+                                                key={transaction.id}
+                                                className="hover:bg-gray-50"
+                                            >
+                                                {/* ID */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                    #{transaction.id}
+                                                </td>
 
-                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                                        {formatDate(
-                                                            transaction.created_at
+                                                {/* Tanggal */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                    {formatDate(
+                                                        transaction.created_at
+                                                    )}
+                                                </td>
+
+                                                {/* Kasir */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
+                                                    {transaction.user?.name ?? '-'}
+                                                </td>
+
+                                                {/* Metode pembayaran */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-sm capitalize text-gray-700">
+                                                    {transaction.payment_method}
+                                                </td>
+
+                                                {/* Total */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-800">
+                                                    Rp{' '}
+                                                    {formatRupiah(
+                                                        transaction.total
+                                                    )}
+                                                </td>
+
+                                                {/* Detail */}
+                                                <td className="whitespace-nowrap px-6 py-4 text-center">
+                                                    <Link
+                                                        href={route(
+                                                            'transactions.show',
+                                                            transaction.id
                                                         )}
-                                                    </td>
-
-                                                    <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-700">
-                                                        {transaction.user?.name ??
-                                                            '-'}
-                                                    </td>
-
-                                                    <td className="whitespace-nowrap px-6 py-4 text-sm capitalize text-gray-700">
-                                                        {
-                                                            transaction.payment_method
-                                                        }
-                                                    </td>
-
-                                                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-semibold text-gray-800">
-                                                        Rp{' '}
-                                                        {formatRupiah(
-                                                            transaction.total
-                                                        )}
-                                                    </td>
-
-                                                    <td className="whitespace-nowrap px-6 py-4 text-center">
-                                                        <Link
-                                                            href={route(
-                                                                'transactions.show',
-                                                                transaction.id
-                                                            )}
-                                                            className="rounded-md bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700"
-                                                        >
-                                                            Detail
-                                                        </Link>
-                                                    </td>
-                                                </tr>
-                                            )
-                                        )}
+                                                        className="rounded-md bg-gray-800 px-3 py-2 text-sm font-medium text-white hover:bg-gray-700"
+                                                    >
+                                                        Detail
+                                                    </Link>
+                                                </td>
+                                            </tr>
+                                        ))}
                                     </tbody>
                                 </table>
                             </div>

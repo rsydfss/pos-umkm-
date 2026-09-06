@@ -31,37 +31,11 @@ class TransactionController extends Controller
         ]);
 
 
-        DB::transaction(function () use ($validated) {
+        $transaction = DB::transaction(function () use ($validated) {
             $total = 0;
             $items = [];
 
-            foreach ($validated['items'] as $item) {
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-
-                if ($product->stock < $item['quantity']) {
-                    throw new \Exception(
-                        "Stok {$product->name} tidak mencukupi."
-                    );
-                }
-
-                $price = $product->selling_price;
-                $subtotal = $price * $item['quantity'];
-
-                $total += $subtotal;
-
-                $items[] = [
-                    'product' => $product,
-                    'quantity' => $item['quantity'],
-                    'price' => $price,
-                    'subtotal' => $subtotal,
-                ];
-            }
-
-            if ($validated['paid_amount'] < $total) {
-                throw new \Exception(
-                    'Nominal pembayaran kurang dari total transaksi.'
-                );
-            }
+            // proses produk...
 
             $transaction = Transaction::create([
                 'user_id' => auth()->id(),
@@ -84,11 +58,13 @@ class TransactionController extends Controller
                     $item['quantity']
                 );
             }
+
+            return $transaction;
         });
 
-        return redirect()
-            ->route('transactions.index')
-            ->with('success', 'Transaksi berhasil disimpan.');
+return redirect()
+    ->route('transactions.receipt', $transaction->id)
+    ->with('success', 'Transaksi berhasil disimpan.');
     }
     public function history()
     {
@@ -111,4 +87,15 @@ class TransactionController extends Controller
             'transaction' => $transaction,
         ]);
     }
+    public function receipt(Transaction $transaction)
+{
+    $transaction->load([
+        'user',
+        'items.product',
+    ]);
+
+    return Inertia::render('Transactions/Receipt', [
+        'transaction' => $transaction,
+    ]);
+}
 }

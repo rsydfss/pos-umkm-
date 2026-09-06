@@ -8,13 +8,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureUserIsAdmin
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
+        ([
+            'user_id' => $request->user()?->id,
+            'name' => $request->user()?->name,
+            'email' => $request->user()?->email,
+            'role' => $request->user()?->role,
+            'is_admin' => $request->user()?->isAdmin(),
+        ]);
+
         if (! $request->user() || ! $request->user()->isAdmin()) {
             abort(403, 'Hanya admin yang boleh mengakses halaman ini.');
         }
