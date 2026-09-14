@@ -1,927 +1,109 @@
 # POS UMKM
 
-Aplikasi Point of Sale (POS) berbasis web untuk membantu UMKM mengelola
-produk, kategori, transaksi penjualan, stok, pengguna, riwayat
-transaksi, dan laporan penjualan dalam satu sistem.
-
-Project ini dibangun menggunakan Laravel sebagai backend dan
-Inertia.js + React sebagai frontend.
-
-------------------------------------------------------------------------
-
-## Daftar Isi
-
--   [Tentang Project](#tentang-project)
--   [Fitur](#fitur)
--   [Role Pengguna](#role-pengguna)
--   [Teknologi](#teknologi)
--   [Struktur Fitur](#struktur-fitur)
--   [Alur Penggunaan](#alur-penggunaan)
--   [Persyaratan Sistem](#persyaratan-sistem)
--   [Instalasi](#instalasi)
--   [Konfigurasi Environment](#konfigurasi-environment)
--   [Menjalankan Project](#menjalankan-project)
--   [Database](#database)
--   [Akun Pengguna](#akun-pengguna)
--   [Struktur Direktori](#struktur-direktori)
--   [Route Utama](#route-utama)
--   [Laporan dan Export](#laporan-dan-export)
--   [Development](#development)
--   [Git Workflow](#git-workflow)
--   [Status Project](#status-project)
--   [Pengembangan Selanjutnya](#pengembangan-selanjutnya)
--   [Lisensi](#lisensi)
-
-------------------------------------------------------------------------
-
-## Tentang Project
-
-**POS UMKM** adalah aplikasi kasir berbasis web yang dibuat untuk
-kebutuhan operasional toko atau usaha kecil dan menengah.
-
-Aplikasi menyediakan dua role utama:
-
--   **Admin** --- mengelola data master, pengguna, laporan, kategori,
-    dan produk.
--   **Kasir** --- melakukan transaksi penjualan dan melihat riwayat
-    transaksi.
-
-Tujuan project ini adalah menyediakan sistem POS yang sederhana,
-terstruktur, dan mudah dikembangkan untuk kebutuhan UMKM.
-
-------------------------------------------------------------------------
-
-## Fitur
-
-### Dashboard
-
-Dashboard menyediakan ringkasan aktivitas penjualan dan visualisasi data
-transaksi.
-
-Fitur yang tersedia:
-
--   Ringkasan transaksi.
--   Informasi penjualan.
--   Grafik/chart transaksi atau omzet.
--   Data yang diambil dari database melalui `DashboardController`.
-
-------------------------------------------------------------------------
-
-### Manajemen Kategori
-
-Admin dapat mengelola kategori produk.
-
-Fitur:
-
--   Menampilkan daftar kategori.
--   Menambahkan kategori.
--   Mengedit kategori.
--   Menghapus kategori.
--   Validasi nama kategori.
-
-------------------------------------------------------------------------
-
-### Manajemen Produk
-
-Admin dapat mengelola seluruh produk yang dijual.
-
-Data produk meliputi:
-
--   Nama produk.
--   SKU.
--   Kategori.
--   Harga beli.
--   Harga jual.
--   Stok.
-
-Fitur:
-
--   Tambah produk.
--   Edit produk.
--   Hapus produk.
--   Validasi SKU unik.
--   Validasi harga.
--   Validasi stok.
--   Relasi produk dengan kategori.
-
-------------------------------------------------------------------------
-
-### Kasir / Transaksi Penjualan
-
-Kasir dapat melakukan transaksi melalui halaman kasir.
-
-Fitur:
-
--   Mencari produk.
--   Filter produk berdasarkan kategori.
--   Menambahkan produk ke keranjang.
--   Mengatur jumlah produk.
--   Menghapus produk dari keranjang.
--   Perhitungan total transaksi.
--   Metode pembayaran:
-    -   Cash
-    -   Transfer
-    -   QRIS
--   Input jumlah pembayaran.
--   Perhitungan kembalian.
--   Penyimpanan transaksi.
-
-Sistem juga melakukan pengecekan agar jumlah produk yang dimasukkan ke
-keranjang tidak melebihi stok yang tersedia.
-
-------------------------------------------------------------------------
-
-### Riwayat Transaksi
-
-Riwayat transaksi digunakan untuk melihat transaksi yang sudah
-tersimpan.
-
-Informasi yang tersedia antara lain:
-
--   Nomor transaksi.
--   Tanggal transaksi.
--   Kasir.
--   Metode pembayaran.
--   Total transaksi.
--   Detail transaksi.
-
-------------------------------------------------------------------------
-
-### Detail dan Struk Transaksi
-
-Setiap transaksi dapat dibuka untuk melihat detailnya.
-
-Aplikasi juga menyediakan fitur receipt/struk transaksi yang dapat
-digunakan untuk kebutuhan pencetakan atau preview.
-
-------------------------------------------------------------------------
-
-### Laporan Penjualan
-
-Admin dapat melihat laporan transaksi berdasarkan periode tanggal.
-
-Fitur:
-
--   Filter tanggal mulai.
--   Filter tanggal akhir.
--   Ringkasan total transaksi.
--   Total penjualan.
--   Export laporan ke PDF.
--   Export laporan ke Excel.
-
-------------------------------------------------------------------------
-
-### Manajemen User
-
-Admin dapat mengelola akun pengguna.
-
-Fitur:
-
--   Melihat daftar user.
--   Menambahkan user.
--   Mengedit user.
--   Menghapus user.
--   Menentukan role:
-    -   `admin`
-    -   `kasir`
--   Admin tidak dapat menghapus akun yang sedang digunakan sendiri.
-
-------------------------------------------------------------------------
-
-### Authentication & Authorization
-
-Aplikasi menggunakan sistem authentication Laravel.
-
-Akses juga dibedakan berdasarkan role.
-
-#### Admin
-
-Admin dapat mengakses:
-
--   Dashboard
--   Kategori
--   Produk
--   Laporan
--   Manajemen User
--   Kasir
--   Riwayat Transaksi
-
-#### Kasir
-
-Kasir dapat mengakses:
-
--   Dashboard
--   Kasir
--   Riwayat Transaksi
-
-Halaman administrasi dilindungi menggunakan middleware `admin`.
-
-Jika user bukan admin mencoba mengakses halaman admin, sistem akan
-menolak akses dengan HTTP 403.
-
-------------------------------------------------------------------------
-
-## Role Pengguna
-
-  -----------------------------------------------------------------------
-  Role                                Akses
-  ----------------------------------- -----------------------------------
-  Admin                               Dashboard, Kategori, Produk, Kasir,
-                                      Riwayat, Laporan, User Management
-
-  Kasir                               Dashboard, Kasir, Riwayat Transaksi
-  -----------------------------------------------------------------------
-
-Role disimpan pada kolom `role` di tabel `users`.
-
-Nilai role yang digunakan:
-
-``` text
-admin
-kasir
-```
-
-------------------------------------------------------------------------
+Aplikasi **Point of Sale (POS) berbasis web** untuk membantu UMKM mengelola produk, stok, transaksi, pengguna, dan laporan penjualan.
+
+## Fitur Utama
+
+- 🔐 Authentication & role **Admin / Kasir**
+- 📊 Dashboard dan grafik penjualan
+- 📦 Manajemen produk dan stok
+- 🏷️ Manajemen kategori
+- 🛒 Transaksi kasir dengan keranjang
+- 💳 Pembayaran Cash, Transfer, dan QRIS
+- 🧾 Detail dan struk transaksi
+- 📋 Riwayat transaksi
+- 📈 Laporan penjualan
+- 📄 Export laporan ke PDF & Excel
+- 👥 Manajemen pengguna
 
 ## Teknologi
 
-Project menggunakan teknologi berikut:
+- **Laravel 13**
+- **PHP 8.4**
+- **React**
+- **Inertia.js**
+- **Tailwind CSS**
+- **Vite**
+- **MySQL / MariaDB**
 
-### Backend
+## Role Pengguna
 
--   PHP 8.4
--   Laravel 13
--   Laravel Eloquent ORM
--   Laravel Authentication
--   Laravel Middleware
--   Laravel Validation
-
-### Frontend
-
--   React
--   Inertia.js
--   Tailwind CSS
--   Vite
--   Recharts
-
-### Database
-
--   MySQL / MariaDB
--   Laravel Migrations
--   Eloquent Relationships
-
-### Export
-
--   Laravel Excel untuk export Excel.
--   Dompdf untuk export PDF.
-
-------------------------------------------------------------------------
-
-## Struktur Fitur
-
-Secara umum, hubungan data aplikasi:
-
-``` text
-User
- │
- ├── Transactions
- │      │
- │      └── Transaction Items
- │              │
- │              └── Product
- │                     │
- │                     └── Category
-```
-
-### Model Utama
-
-#### User
-
-Menyimpan informasi pengguna aplikasi.
-
-Field utama:
-
-``` text
-id
-name
-email
-password
-role
-```
-
-#### Category
-
-Menyimpan kategori produk.
-
-#### Product
-
-Menyimpan produk yang dijual.
-
-Field utama:
-
-``` text
-id
-category_id
-name
-sku
-purchase_price
-selling_price
-stock
-```
-
-#### Transaction
-
-Menyimpan transaksi penjualan.
-
-Field utama:
-
-``` text
-id
-user_id
-total
-payment_method
-paid_amount
-change_amount
-```
-
-#### TransactionItem
-
-Menyimpan detail produk yang terdapat dalam transaksi.
-
-Field utama:
-
-``` text
-id
-transaction_id
-product_id
-quantity
-price
-subtotal
-```
-
-------------------------------------------------------------------------
-
-## Alur Penggunaan
-
-Alur penggunaan aplikasi secara umum:
-
-``` text
-Login
-  │
-  ▼
-Dashboard
-  │
-  ├── Admin
-  │     ├── Kelola Kategori
-  │     ├── Kelola Produk
-  │     ├── Kelola User
-  │     └── Laporan
-  │
-  └── Kasir
-        │
-        ▼
-      Kasir
-        │
-        ▼
-      Pilih Produk
-        │
-        ▼
-      Keranjang
-        │
-        ▼
-      Pembayaran
-        │
-        ▼
-      Transaksi Tersimpan
-        │
-        ├── Riwayat Transaksi
-        └── Struk
-```
-
-------------------------------------------------------------------------
-
-## Persyaratan Sistem
-
-Sebelum menjalankan project, pastikan komputer sudah memiliki:
-
--   PHP 8.4 atau versi yang kompatibel dengan project.
--   Composer.
--   Node.js dan npm.
--   MySQL atau MariaDB.
--   Git.
-
-Project dikembangkan pada environment:
-
-``` text
-Windows 11
-PHP 8.4.0
-Laravel 13.29.0
-```
-
-------------------------------------------------------------------------
+| Role | Akses |
+|---|---|
+| **Admin** | Dashboard, Produk, Kategori, Kasir, Riwayat, Laporan, Manajemen User |
+| **Kasir** | Dashboard, Kasir, Riwayat Transaksi |
 
 ## Instalasi
 
 Clone repository:
 
-``` bash
+```bash
 git clone https://github.com/USERNAME/pos-umkm.git
-```
-
-Masuk ke directory project:
-
-``` bash
 cd pos-umkm
 ```
 
-Install dependency PHP:
+Install dependency:
 
-``` bash
+```bash
 composer install
-```
-
-Install dependency frontend:
-
-``` bash
 npm install
 ```
 
-Copy file environment:
+Buat file environment:
 
-``` bash
+```bash
 copy .env.example .env
-```
-
-Pada Linux/macOS:
-
-``` bash
-cp .env.example .env
 ```
 
 Generate application key:
 
-``` bash
+```bash
 php artisan key:generate
 ```
 
-------------------------------------------------------------------------
+Atur database pada `.env`, kemudian jalankan:
 
-## Konfigurasi Environment
-
-Buka file:
-
-``` text
-.env
-```
-
-Kemudian sesuaikan konfigurasi database.
-
-Contoh:
-
-``` env
-APP_NAME="POS UMKM"
-APP_ENV=local
-APP_DEBUG=true
-
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=pos_umkm
-DB_USERNAME=root
-DB_PASSWORD=
-```
-
-Buat database dengan nama yang sesuai, misalnya:
-
-``` text
-pos_umkm
-```
-
-Kemudian jalankan migration:
-
-``` bash
+```bash
 php artisan migrate
 ```
 
-Jika project memiliki seeder yang ingin digunakan:
-
-``` bash
-php artisan db:seed
-```
-
-Atau:
-
-``` bash
-php artisan migrate --seed
-```
-
-> Jangan memasukkan file `.env` ke repository karena file tersebut dapat
-> berisi credential dan konfigurasi lokal.
-
-------------------------------------------------------------------------
-
 ## Menjalankan Project
 
-Project membutuhkan server Laravel dan Vite.
+Terminal 1:
 
-### Terminal 1 --- Laravel
-
-``` bash
+```bash
 php artisan serve
 ```
 
-Biasanya aplikasi dapat diakses melalui:
+Terminal 2:
 
-``` text
+```bash
+npm run dev
+```
+
+Aplikasi biasanya dapat diakses melalui:
+
+```text
 http://127.0.0.1:8000
 ```
 
-### Terminal 2 --- Vite
+## Status
 
-``` bash
-npm run dev
-```
-
-Vite diperlukan selama development agar asset React, CSS, dan JavaScript
-diproses serta diperbarui ketika source code berubah.
-
-Untuk production, proses build dapat dilakukan dengan:
-
-``` bash
-npm run build
-```
-
-------------------------------------------------------------------------
-
-## Database
-
-Migration digunakan untuk membuat struktur database.
-
-Beberapa tabel utama:
-
-``` text
-users
-categories
-products
-transactions
-transaction_items
-```
-
-Relasi penting:
-
-``` text
-categories
-    │
-    └── products
-
-users
-    │
-    └── transactions
-
-transactions
-    │
-    └── transaction_items
-
-products
-    │
-    └── transaction_items
-```
-
-Untuk melihat status migration:
-
-``` bash
-php artisan migrate:status
-```
-
-------------------------------------------------------------------------
-
-## Akun Pengguna
-
-Project menggunakan role-based access.
-
-Contoh akun:
-
-``` text
-Role: admin
-Username/Name: admin09
-```
-
-> Password tidak dicantumkan di README demi keamanan. Gunakan password
-> yang dibuat pada database atau buat/reset password melalui mekanisme
-> Laravel yang tersedia.
-
-Untuk melihat user melalui Laravel Tinker:
-
-``` bash
-php artisan tinker
-```
-
-Kemudian:
-
-``` php
-User::all(['id', 'name', 'email', 'role']);
-```
-
-------------------------------------------------------------------------
-
-## Struktur Direktori
-
-Struktur utama project:
-
-``` text
-pos-umkm/
-├── app/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   └── Middleware/
-│   └── Models/
-│
-├── bootstrap/
-│
-├── config/
-│
-├── database/
-│   ├── migrations/
-│   ├── seeders/
-│   └── factories/
-│
-├── public/
-│
-├── resources/
-│   ├── js/
-│   │   ├── Components/
-│   │   ├── Layouts/
-│   │   └── Pages/
-│   │       ├── Categories/
-│   │       ├── Dashboard.jsx
-│   │       ├── Products/
-│   │       ├── Reports/
-│   │       ├── Transactions/
-│   │       └── Users/
-│   └── css/
-│
-├── routes/
-│   ├── web.php
-│   └── auth.php
-│
-├── storage/
-├── tests/
-├── .env.example
-├── artisan
-├── composer.json
-├── package.json
-└── vite.config.js
-```
-
-------------------------------------------------------------------------
-
-## Route Utama
-
-Beberapa route utama aplikasi:
-
-  Route                          Fungsi               Akses
-  ------------------------------ -------------------- -------
-  `/dashboard`                   Dashboard            Login
-  `/categories`                  Manajemen kategori   Admin
-  `/products`                    Manajemen produk     Admin
-  `/transactions`                Kasir/transaksi      Login
-  `/transactions/history`        Riwayat transaksi    Login
-  `/transactions/{id}/receipt`   Struk transaksi      Login
-  `/reports`                     Laporan              Admin
-  `/reports/export/excel`        Export Excel         Admin
-  `/reports/export/pdf`          Export PDF           Admin
-  `/users`                       Manajemen user       Admin
-  `/profile`                     Profile pengguna     Login
-
-Route transaksi menggunakan pembatasan numeric parameter agar route:
-
-``` text
-/transactions/history
-```
-
-tidak tertangkap sebagai:
-
-``` text
-/transactions/{transaction}
-```
-
-------------------------------------------------------------------------
-
-## Laporan dan Export
-
-Laporan transaksi dapat difilter berdasarkan periode.
-
-Export yang tersedia:
-
-### Excel
-
-``` text
-/reports/export/excel
-```
-
-### PDF
-
-``` text
-/reports/export/pdf
-```
-
-PDF menggunakan view:
-
-``` text
-resources/views/exports/pdf.blade.php
-```
-
-------------------------------------------------------------------------
-
-## Development
-
-Saat mengembangkan aplikasi, jalankan:
-
-``` bash
-php artisan serve
-```
-
-dan:
-
-``` bash
-npm run dev
-```
-
-Untuk memeriksa daftar route:
-
-``` bash
-php artisan route:list
-```
-
-Untuk memeriksa route tertentu:
-
-``` bash
-php artisan route:list --path=transactions
-```
-
-atau:
-
-``` bash
-php artisan route:list --path=users
-```
-
-Untuk membersihkan cache Laravel ketika diperlukan:
-
-``` bash
-php artisan optimize:clear
-```
-
-Untuk melakukan build frontend:
-
-``` bash
-npm run build
-```
-
-------------------------------------------------------------------------
-
-## Git Workflow
-
-Setelah melakukan perubahan:
-
-``` bash
-git status
-```
-
-Periksa file yang berubah.
-
-Kemudian:
-
-``` bash
-git add .
-```
-
-Buat commit:
-
-``` bash
-git commit -m "Deskripsi perubahan"
-```
-
-Push ke GitHub:
-
-``` bash
-git push origin main
-```
-
-Contoh:
-
-``` bash
-git add .
-git commit -m "Improve POS dashboard and transaction UI"
-git push origin main
-```
-
-Sebelum commit, pastikan file sensitif seperti `.env` tidak ikut
-ter-upload.
-
-------------------------------------------------------------------------
-
-## Status Project
-
-Saat README ini dibuat, fitur utama yang telah tersedia:
-
--   [x] Authentication
--   [x] Role Admin dan Kasir
--   [x] Authorization middleware
--   [x] Dashboard
--   [x] Dashboard chart
--   [x] Manajemen kategori
--   [x] Manajemen produk
--   [x] Manajemen user
--   [x] Halaman kasir
--   [x] Keranjang transaksi
--   [x] Metode pembayaran
--   [x] Perhitungan total dan kembalian
--   [x] Penyimpanan transaksi
--   [x] Riwayat transaksi
--   [x] Detail transaksi
--   [x] Receipt / struk transaksi
--   [x] Laporan transaksi
--   [x] Export PDF
--   [x] Export Excel
--   [x] UI/UX dasar untuk halaman utama
--   [x] Responsive layout dasar
-
-------------------------------------------------------------------------
+Project saat ini sudah memiliki fitur utama POS dan siap digunakan sebagai **versi dasar/stabil** untuk pengembangan selanjutnya.
 
 ## Pengembangan Selanjutnya
 
-Project ini masih dapat dikembangkan lebih lanjut.
+Beberapa fitur yang dapat dikembangkan:
 
-Beberapa fitur yang dapat ditambahkan:
+- Barcode scanner
+- Printer thermal
+- Notifikasi stok menipis
+- Laporan laba/rugi
+- Backup database
+- Pengaturan toko
+- Audit log
+- Multi-cabang
 
--   Barcode scanner.
--   Cetak struk langsung ke printer thermal.
--   Pengelolaan stok yang lebih lengkap.
--   Riwayat perubahan stok.
--   Notifikasi stok menipis.
--   Laporan laba/rugi.
--   Laporan produk terlaris.
--   Filter laporan yang lebih lengkap.
--   Backup dan restore database.
--   Pengaturan toko.
--   Logo dan informasi toko pada struk.
--   Multi-cabang.
--   Audit log aktivitas pengguna.
--   Dashboard dengan statistik yang lebih lengkap.
+---
 
-Fitur-fitur tersebut dapat dikembangkan secara bertahap setelah versi
-dasar POS dinyatakan stabil.
-
-------------------------------------------------------------------------
-
-## Catatan Keamanan
-
-Jangan commit informasi sensitif ke GitHub.
-
-Pastikan file berikut tetap berada di `.gitignore`:
-
-``` text
-.env
-/vendor
-/node_modules
-```
-
-Jangan menyimpan:
-
--   Password database.
--   API key.
--   Secret key.
--   Credential production.
--   Password akun admin.
-
-Untuk environment production, gunakan:
-
-``` env
-APP_ENV=production
-APP_DEBUG=false
-```
-
-dan konfigurasi credential melalui environment server.
-
-------------------------------------------------------------------------
-
-## Tujuan Project
-
-POS UMKM dibuat sebagai aplikasi POS yang:
-
--   Sederhana digunakan.
--   Memiliki pemisahan role yang jelas.
--   Memiliki manajemen produk dan kategori.
--   Mendukung proses transaksi penjualan.
--   Menyimpan riwayat transaksi.
--   Menyediakan laporan.
--   Mudah dikembangkan untuk kebutuhan UMKM di masa mendatang.
-
-------------------------------------------------------------------------
-
-## Lisensi
-
-Project ini dibuat untuk keperluan pembelajaran dan pengembangan
-aplikasi POS UMKM.
-
-Lisensi dapat ditentukan sesuai kebutuhan pemilik repository.
+**POS UMKM** — Sistem kasir sederhana untuk membantu operasional UMKM.
